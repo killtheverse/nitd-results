@@ -14,15 +14,17 @@ import (
 
 	"github.com/killtheverse/nitd-results/app/db"
 	"github.com/killtheverse/nitd-results/config"
+	"github.com/killtheverse/nitd-results/app/handlers"
 )
 
 // Structure for the app
-// It contains the serverAddress, router, Database client and the logger
+// It contains the serverAddress, router, Database client, Database name and the logger
 type App struct {
 	serverAddress	string
 	Router			*mux.Router
 	DBClient		*mongo.Client
 	logger			*log.Logger
+	DBName			string
 }
 
 // Configure the app and run
@@ -38,11 +40,17 @@ func(app *App) initialize(config *config.Config) {
 	app.Router = mux.NewRouter()
 	app.logger = log.New(os.Stdout, "results-app ", log.LstdFlags)
 	app.DBClient = db.Connect(config.DBName, config.DBURI, app.logger)
+	app.DBName = config.DBName
+	app.setupRouters()
 }
 
 // Register the routes in the router
 func(app *App) setupRouters() {
-	// TODO:Implement
+	app.get("/api/students", app.handleRequest(handlers.GetStudents))
+}
+
+func (app *App) get(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("GET").Queries(queries...)
 }
 
 // Run will start the http server
@@ -79,4 +87,13 @@ func(app *App) run() {
 	app.logger.Print("Gracefully stopping server")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	server.Shutdown(ctx)
+}
+
+type RequestHandlerFunction func (db *mongo.Database, w http.ResponseWriter, r *http.Request)
+
+func (app *App) handleRequest(handler RequestHandlerFunction) http.HandlerFunc {
+	db := app.DBClient.Database(app.DBName)
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler(db, w, r)
+	}
 }
