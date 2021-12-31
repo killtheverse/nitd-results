@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,10 +10,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 
 	"github.com/killtheverse/nitd-results/app/db"
-	"github.com/killtheverse/nitd-results/config"
 	"github.com/killtheverse/nitd-results/app/handlers"
+	logger "github.com/killtheverse/nitd-results/app/logging"
+	"github.com/killtheverse/nitd-results/config"
 )
 
 // Structure for the app
@@ -23,8 +24,7 @@ type App struct {
 	serverAddress	string
 	Router			*mux.Router
 	DBClient		*mongo.Client
-	logger			*log.Logger
-	DBName			string
+	DB				*mongo.Database
 }
 
 // Configure the app and run
@@ -38,19 +38,33 @@ func ConfigAndRun(config *config.Config) {
 func(app *App) initialize(config *config.Config) {
 	app.serverAddress = config.ServerAddress
 	app.Router = mux.NewRouter()
-	app.logger = log.New(os.Stdout, "results-app ", log.LstdFlags)
-	app.DBClient = db.Connect(config.DBName, config.DBURI, app.logger)
-	app.DBName = config.DBName
+	app.DBClient = db.Connect(config.DBURI)
+	app.DB = app.DBClient.Database(config.DBName)
+	app.createIndexes()
 	app.setupRouters()
+}
+
+// createIndexes will create unique and index fields
+func (app *App) createIndexes() {
+	keys := bsonx.Doc{
+		{Key: "roll_number", Value: bsonx.Int32(1)},
+	}
+	students := app.DB.Collection("students")
+	db.SetIndexes(students, keys)
 }
 
 // Register the routes in the router
 func(app *App) setupRouters() {
-	app.get("/api/students", app.handleRequest(handlers.GetStudents))
+	app.get("/students", app.handleRequest(handlers.GetStudents))
+	app.post("/students/", app.handleRequest(handlers.CreateStudent))
 }
 
 func (app *App) get(path string, endpoint http.HandlerFunc, queries ...string) {
 	app.Router.HandleFunc(path, endpoint).Methods("GET").Queries(queries...)
+}
+
+func (app *App) post(path string, endpoint http.HandlerFunc, queries ...string) {
+	app.Router.HandleFunc(path, endpoint).Methods("POST").Queries(queries...)
 }
 
 // Run will start the http server
@@ -58,17 +72,16 @@ func(app *App) run() {
 	server := http.Server{
 		Addr: app.serverAddress,		// configure the bind address
 		Handler: app.Router,			// set the default handler
-		ErrorLog: app.logger,			// set the logger for the server
 		ReadTimeout: 5*time.Second,		// max time to read request from the client
 		WriteTimeout: 10*time.Second,	// max time to write response to the client
 		IdleTimeout: 120*time.Second,	// max time for conncections using TCP Keep-Alive
 	}
 
 	go func() {
-		app.logger.Println("Starting the server on:", app.serverAddress)
+		logger.Write("Starting the server on: %v", app.serverAddress)
 		err := server.ListenAndServe()
 		if err != nil {
-			app.logger.Fatal("[ERROR] Can't start server:", err)
+			logger.Fatal("[ERROR] Can't start server: %v", err)
 		}
 	}()
 
@@ -78,22 +91,23 @@ func(app *App) run() {
 	
 	// Block until a signal is recieved
 	sig := <-sigs
-	app.logger.Printf("Trapped signal:%v\nShutting down the server", sig)
+	logger.Write("Trapped signal:%v\nShutting down the server", sig)
 
 	// Disconnect the MongoDB client
-	db.Disconnect(app.DBClient, app.logger)
+	db.Disconnect(app.DBClient)
 
 	// Shutdown the server, waiting for max 30 seconds
-	app.logger.Print("Gracefully stopping server")
+	logger.Write("Gracefully stopping server")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	server.Shutdown(ctx)
 }
 
-type RequestHandlerFunction func (db *mongo.Database, w http.ResponseWriter, r *http.Request)
+// RequestHandlerFunction is a custome type that help us to pass db arg to all endpoints
+type RequestHandlerFunction func(db *mongo.Database, w http.ResponseWriter, r *http.Request)
 
+// handleRequest is a middleware we create for pass in db connection to endpoints.
 func (app *App) handleRequest(handler RequestHandlerFunction) http.HandlerFunc {
-	db := app.DBClient.Database(app.DBName)
 	return func(w http.ResponseWriter, r *http.Request) {
-		handler(db, w, r)
+		handler(app.DB, w, r)
 	}
 }

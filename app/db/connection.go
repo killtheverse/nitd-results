@@ -2,28 +2,35 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	logger "github.com/killtheverse/nitd-results/app/logging"
 )
 
-func Connect(dbName string, mongoURI string, logger *log.Logger) *mongo.Client {
+func Connect(mongoURI string) *mongo.Client {
+	logger.Write("Connecting to database")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		logger.Fatalf("[ERROR] Can't connect to Database(%v): %v\n", dbName, err)
+		logger.Fatal("[ERROR]: Can't connect to Database: %v\n", err)
+	} else {
+		logger.Write("Connected to database")
 	}
 	return client
 }
 
-func Disconnect(client *mongo.Client, logger *log.Logger) {
+func Disconnect(client *mongo.Client) {
+	logger.Write("Disconnecting from database")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	err := client.Disconnect(ctx)
 	if err != nil {
-		logger.Printf("[ERROR] Error in disconnection: %v\n", err)
+		logger.Write("[ERROR]: Error in disconnection: %v\n", err)
+	} else {
+		logger.Write("Disconnected from database")
 	}
 }

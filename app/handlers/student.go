@@ -1,14 +1,42 @@
 package handlers
 
 import (
+	// "context"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	// "time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
+	logger "github.com/killtheverse/nitd-results/app/logging"
 	"github.com/killtheverse/nitd-results/app/models"
 )
 
-func GetStudents(db *mongo.Database, rw http.ResponseWriter, r *http.Request) {
-	var studentList []models.Student
-	ResponseWriter(rw, http.StatusOK, "", studentList)
+func GetStudents(db *mongo.Database, response_writer http.ResponseWriter, request *http.Request) {
+	studentList := []int{1, 2,3 }
+	ResponseWriter(response_writer, http.StatusOK, "", studentList)
+}
+
+func CreateStudent(db *mongo.Database, response_writer http.ResponseWriter, request *http.Request) {
+	student := new(models.Student)
+	err := json.NewDecoder(request.Body).Decode(student)
+	if err != nil {
+		ResponseWriter(response_writer, http.StatusBadRequest, "Invalid JSON body", nil)
+		logger.Write("[ERROR]: %v", err)
+		return
+	}
+	fmt.Println(student)
+	ResponseWriter(response_writer, http.StatusCreated, "Created Student", student)
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// result, err := db.Collection("students").InsertOne(ctx, student)
+	// if err != nil {
+	// 	switch err.(type) {
+	// 	case mongo.WriteException:
+	// 		ResponseWriter(response_writer, http.StatusNotAcceptable, "Can't write in the database", nil)
+	// 	default:
+	// 		ResponseWriter(response_writer, http.StatusInternalServerError, "Error occured", nil)
+	// 	}
+	// }
 }
