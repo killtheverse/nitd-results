@@ -11,23 +11,24 @@ import (
 
 	logger "github.com/killtheverse/nitd-results/app/logging"
 	"github.com/killtheverse/nitd-results/app/models"
+	"github.com/killtheverse/nitd-results/app/utils"
 )
 
 func GetStudents(db *mongo.Database, response_writer http.ResponseWriter, request *http.Request) {
 	studentList := []int{1, 2,3 }
-	ResponseWriter(response_writer, http.StatusOK, "", studentList)
+	utils.ResponseWriter(response_writer, http.StatusOK, "", studentList)
 }
 
 func CreateStudent(db *mongo.Database, response_writer http.ResponseWriter, request *http.Request) {
 	student := new(models.Student)
 	err := json.NewDecoder(request.Body).Decode(student)
 	if err != nil {
-		ResponseWriter(response_writer, http.StatusBadRequest, "Invalid JSON body", nil)
+		utils.ResponseWriter(response_writer, http.StatusBadRequest, "Invalid JSON body", nil)
 		logger.Write("[ERROR]: %v", err)
 		return
 	}
 	fmt.Println(student)
-	ResponseWriter(response_writer, http.StatusCreated, "Created Student", student)
+	utils.ResponseWriter(response_writer, http.StatusCreated, "Created Student", student)
 	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	// defer cancel()
 	// result, err := db.Collection("students").InsertOne(ctx, student)

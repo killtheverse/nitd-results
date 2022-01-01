@@ -1,4 +1,4 @@
-package handlers
+package utils
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"github.com/killtheverse/nitd-results/app/models"
 )
 
+// ResponseWriter writes response based on data provided
 func ResponseWriter(rw http.ResponseWriter, statusCode int, message string, data interface{}) error {
 	rw.WriteHeader(statusCode)
 	httpResponse := models.NewResponse(statusCode, message, data)

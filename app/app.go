@@ -14,6 +14,7 @@ import (
 
 	"github.com/killtheverse/nitd-results/app/db"
 	"github.com/killtheverse/nitd-results/app/handlers"
+	"github.com/killtheverse/nitd-results/app/utils"
 	logger "github.com/killtheverse/nitd-results/app/logging"
 	"github.com/killtheverse/nitd-results/config"
 )
@@ -40,8 +41,15 @@ func(app *App) initialize(config *config.Config) {
 	app.Router = mux.NewRouter()
 	app.DBClient = db.Connect(config.DBURI)
 	app.DB = app.DBClient.Database(config.DBName)
+	app.setupMiddlewares()
 	app.createIndexes()
 	app.setupRouters()
+}
+
+// setupMiddlewares will add middlewares to main router
+func(app *App) setupMiddlewares() {
+	app.Router.Use(utils.JSONContentTypeMiddleware)
+	app.Router.Use(utils.LoggingMiddleware)
 }
 
 // createIndexes will create unique and index fields
@@ -55,16 +63,9 @@ func (app *App) createIndexes() {
 
 // Register the routes in the router
 func(app *App) setupRouters() {
-	app.get("/students", app.handleRequest(handlers.GetStudents))
-	app.post("/students/", app.handleRequest(handlers.CreateStudent))
-}
-
-func (app *App) get(path string, endpoint http.HandlerFunc, queries ...string) {
-	app.Router.HandleFunc(path, endpoint).Methods("GET").Queries(queries...)
-}
-
-func (app *App) post(path string, endpoint http.HandlerFunc, queries ...string) {
-	app.Router.HandleFunc(path, endpoint).Methods("POST").Queries(queries...)
+	studentRouter := app.Router.PathPrefix("/students").Subrouter()
+	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
+	studentRouter.HandleFunc("/", app.handleRequest(handlers.CreateStudent)).Methods("POST")
 }
 
 // Run will start the http server
@@ -87,7 +88,7 @@ func(app *App) run() {
 
 	// Signals for shutting down the server
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	
 	// Block until a signal is recieved
 	sig := <-sigs
@@ -98,7 +99,8 @@ func(app *App) run() {
 
 	// Shutdown the server, waiting for max 30 seconds
 	logger.Write("Gracefully stopping server")
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	server.Shutdown(ctx)
 }
 

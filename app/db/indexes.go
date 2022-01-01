@@ -11,6 +11,7 @@ import (
 	logging "github.com/killtheverse/nitd-results/app/logging"
 )
 
+// SetIndexes will set the indexes in database
 func SetIndexes(collection *mongo.Collection, keys bsonx.Doc) {
 	index := mongo.IndexModel{}
 	index.Keys = keys

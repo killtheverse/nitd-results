@@ -10,6 +10,7 @@ import (
 	logger "github.com/killtheverse/nitd-results/app/logging"
 )
 
+// Connect will connect to MongoDB Database and return the client
 func Connect(mongoURI string) *mongo.Client {
 	logger.Write("Connecting to database")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -23,6 +24,7 @@ func Connect(mongoURI string) *mongo.Client {
 	return client
 }
 
+// Disconnect will disconnect the client from the Database
 func Disconnect(client *mongo.Client) {
 	logger.Write("Disconnecting from database")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
