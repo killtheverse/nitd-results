@@ -66,6 +66,7 @@ func(app *App) setupRouters() {
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.CreateStudent)).Methods("POST")
+	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.UpdateStudent)).Methods("PUT")
 }
 
 // Run will start the http server

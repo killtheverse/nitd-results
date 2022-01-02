@@ -1,70 +1,31 @@
 package models
 
 import (
-	"encoding/json"
-	"io"
 	"time"
 )
 
 type Course struct {
-	Name 		string		`json:"name"`
-	Code		string		`json:"code"`
-	Credits		int 		`json:"course_credits"`
-	Grade		string		`json:"grade"`
+	Name 		string		`json:"name" validate:"required"`
+	Code		string		`json:"code" validate:"required"`
+	Credits		int 		`json:"course_credits" validate:"required,gt=0"`
+	Grade		string		`json:"grade" validate:"required"`
 }
 
 type Semester struct {
-	Number		int			`json:"number"`
-	Credits		int			`json:"earned_credits"`
-	SGPA		float32		`json:"sgpa"`
-	CGPA		float32		`json:"cgpa"`
-	Courses		[]Course	`json:"courses"`
+	Number		int			`json:"number" validate:"required"`
+	Credits		int			`json:"earned_credits" validate:"required,gt=0"`
+	SGPA		float32		`json:"sgpa" validate:"required"`
+	CGPA		float32		`json:"cgpa" validate:"required"`
+	Courses		[]Course	`json:"courses" validatre:"required,dive"`
 }
 
 type Student struct {
-	Roll		string		`json:"roll_no"`
-	Name		string		`json:"name"`
-	Program		string		`json:"program"`
-	Branch		string		`json:"branch"`
-	CGPA		float32		`json:"cgpa"`
-	Semesters 	[]Semester	`json:"semesters"`
+	Roll		string		`json:"roll_no" validate:"required,numeric,len=9"`
+	Name		string		`json:"name" validate:"required"`
+	Program		string		`json:"program" validate:"required"`
+	Branch		string		`json:"branch" validate:"required"`
+	CGPA		float32		`json:"cgpa" validate:"required"`
+	Semesters 	[]Semester	`json:"semesters" validate:"required,dive"`
 	CreatedAt	time.Time	`json:"createdAt"`
 	UpdatedAt	time.Time	`json:"updatedAt"`
-}
-
-func (s *Student) FromJSON(r io.Reader) error {
-	e := json.NewDecoder(r)
-	return e.Decode(s)
-}
-
-func NewCourse(name string, code string, credits int, grade string) *Course {
-	return &Course{
-		Name: name,
-		Code: code,
-		Credits: credits,
-		Grade: grade,
-	}
-}
-
-func NewSemester(number int, credits int, sgpa float32, cgpa float32, courses []Course) *Semester {
-	return &Semester{
-		Number: number,
-		Credits: credits,
-		SGPA: sgpa,
-		CGPA: cgpa,
-		Courses: courses,
-	}
-}
-
-func NewStudent(roll string, name string, program string, branch string, cgpa float32, semesters []Semester) *Student {
-	return &Student{
-		Name: name,
-		Roll: roll,
-		Program: program,
-		Branch: branch,
-		CGPA: cgpa,
-		Semesters: semesters,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
 }
