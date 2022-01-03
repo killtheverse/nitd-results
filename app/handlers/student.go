@@ -1,16 +1,17 @@
 package handlers
 
 import (
-	// "context"
+	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
-	// "time"
-
-	//"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	logger "github.com/killtheverse/nitd-results/app/logging"
 	"github.com/killtheverse/nitd-results/app/models"
@@ -18,57 +19,173 @@ import (
 )
 
 func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
-	studentList := []int{1, 2,3 }
-	utils.ResponseWriter(rw, http.StatusOK, "", studentList)
-}
-
-func CreateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
-	student := new(models.Student)
-	err := json.NewDecoder(request.Body).Decode(student)
+	// Extract query parameters
+	var params = request.URL.Query()
+	limitString := params.Get("limit")
+	offsetString := params.Get("offset")
+	batch := params.Get("batch")
+	branch := params.Get("branch")
+	program := params.Get("program")
+	
+	// If limit and offset not present or invalid, then assign default values
+	limit, err := strconv.ParseInt(limitString, 10, 64)
 	if err != nil {
-		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
-		logger.Write("[ERROR]: %v", err)
+		limit = 100
+	}
+	offset, err := strconv.ParseInt(offsetString, 10, 64)
+	if err != nil {
+		offset = 0
+	}
+
+	// Create filter
+	batchString := "^" + batch
+	branchString := "^" + branch
+	programString := "^" + program
+
+	filter := bson.D{
+		{"roll_no", bson.D{{"$regex", batchString}}},
+		{"branch", bson.D{{"$regex", branchString}, {"$options", "i"}}},
+		{"program", bson.D{{"$regex", programString}, {"$options", "i"}}},
+	}
+
+	opts := options.FindOptions{
+		Skip: &offset,
+		Limit: &limit,
+		Sort: bson.M{
+			"roll_no": 1,
+		},
+	}
+
+	// Query the database
+	var students []models.Student
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	cursor, err := db.Collection("students").Find(ctx, filter, &opts)
+	if err != nil {
+		logger.Write("[ERROR]: While quering collection - %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
 		return
 	}
-	fmt.Println(student)
-	utils.ResponseWriter(rw, http.StatusCreated, "Created Student", student)
-	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
-	// result, err := db.Collection("students").InsertOne(ctx, student)
-	// if err != nil {
-	// 	switch err.(type) {
-	// 	case mongo.WriteException:
-	// 		ResponseWriter(response_writer, http.StatusNotAcceptable, "Can't write in the database", nil)
-	// 	default:
-	// 		ResponseWriter(response_writer, http.StatusInternalServerError, "Error occured", nil)
-	// 	}
-	// }
+	err = cursor.All(context.Background(), &students)
+	if err != nil {
+		logger.Write("[ERROR] in cursor - %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
+		return
+	}
+	utils.ResponseWriter(rw, http.StatusOK, "Retrieved students list", students)
+}
+
+func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
+	// Extract roll number from request URI
+	var params = mux.Vars(request)
+	roll_no := params["roll_number"]
+	
+	// Find the student document
+	var student models.Student
+	filter := bson.M{"roll_no": roll_no}
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	err := db.Collection("students").FindOne(ctx, filter).Decode(&student)
+	if err == mongo.ErrNoDocuments {
+		logger.Write("No document found for roll number: %s.", student.Roll)
+		utils.ResponseWriter(rw, http.StatusNotFound, "No document exists", nil)
+	} else if err == nil{
+		logger.Write("Document found for %s", student.Roll)
+		utils.ResponseWriter(rw, http.StatusOK, "Found the document", student)
+	} else {
+		logger.Write("[ERROR]: %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for document", nil)
+	}
 }
 
 func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
+	// Extract roll number from request URI
+	var params = mux.Vars(request)
+	roll_no := params["roll_number"]
+	
 	// Parse request body and extract the student
-	student := new(models.Student)
-	err := json.NewDecoder(request.Body).Decode(student)
+	var student models.Student
+	err := json.NewDecoder(request.Body).Decode(&student)
 	if err != nil {
 		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
 		logger.Write("[ERROR]: %v", err)
 		return
 	}
 
+	// Validate the parsed student structure
 	validate := validator.New()
 	err = validate.Struct(student)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
 		responseBody := map[string]string{"error": validationErrors.Error()}
 		utils.ResponseWriter(rw, http.StatusUnprocessableEntity, "Errors in validation", responseBody)
+		return
 	}
 
-	// filter := bson.D{
-	// 	{"roll_no": student.Roll}
-	// }
+	if student.Roll != roll_no {
+		logger.Write("Roll number in payload does not match roll number in URI")
+		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid roll number in payload", nil)
+		return
+	}
 
-	// // Find the student and update it
-	// ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
-	// defer cancel()
-	// err = db.Collection("students").FindOneAndReplace(ctx, )
+	var existing_student models.Student
+	var existing_semesters []models.Semester
+	filter := bson.M{"roll_no": student.Roll}
+
+	// Check if the student already exists in record
+	var exists bool = true
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	err = db.Collection("students").FindOne(ctx, filter).Decode(&existing_student)
+	if err == mongo.ErrNoDocuments {
+		exists = false
+		logger.Write("No document found for roll number: %s. Creating new document", student.Roll)
+		student.CreatedAt = time.Now()
+	} else if err == nil{
+		logger.Write("Document already exists for roll number: %s. Updating", student.Roll)
+		student.CreatedAt = existing_student.CreatedAt
+		existing_semesters = existing_student.Semesters
+	} else {
+		logger.Write("[ERROR]: %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for existing documents", nil)
+		return
+	}
+	student.UpdatedAt = time.Now()
+
+	// Include any semester which already exists in the database but is missing in new body
+	for _, existing_sem := range existing_semesters {
+		var present bool = false
+		for _, new_sem := range student.Semesters {
+			if existing_sem.Number == new_sem.Number {
+				present = true
+				break
+			}
+		}
+		if !present {
+			student.Semesters = append(student.Semesters, existing_sem)
+		}
+	}
+
+	// Update the document for student
+	ctx, cancel = context.WithTimeout(context.Background(), 5 * time.Second)
+	defer cancel()
+	if exists {
+		_, err = db.Collection("students").ReplaceOne(ctx, filter, student)
+	} else {
+		_, err = db.Collection("students").InsertOne(ctx, student)
+	}
+	
+	if err != nil {
+		logger.Write("[ERROR] Updating docuement - %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while updating document", nil)
+	} else {
+		var message string
+		if exists {
+			message = "Successfully updated student"
+		} else {
+			message = "Successfully created student"
+		}
+		logger.Write("Successfully updated document for %s", student.Roll)
+		utils.ResponseWriter(rw, http.StatusCreated, message, student)
+	}
 }

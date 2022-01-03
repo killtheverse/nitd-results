@@ -55,7 +55,7 @@ func(app *App) setupMiddlewares() {
 // createIndexes will create unique and index fields
 func (app *App) createIndexes() {
 	keys := bsonx.Doc{
-		{Key: "roll_number", Value: bsonx.Int32(1)},
+		{Key: "roll_no", Value: bsonx.Int32(1)},
 	}
 	students := app.DB.Collection("students")
 	db.SetIndexes(students, keys)
@@ -65,8 +65,8 @@ func (app *App) createIndexes() {
 func(app *App) setupRouters() {
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
-	studentRouter.HandleFunc("/", app.handleRequest(handlers.CreateStudent)).Methods("POST")
 	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.UpdateStudent)).Methods("PUT")
+	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.GetStudent)).Methods("GET")
 }
 
 // Run will start the http server
