@@ -16,3 +16,5 @@ vendor/
 
 .env
 .git-token
+key.rsa
+key.rsa.pub

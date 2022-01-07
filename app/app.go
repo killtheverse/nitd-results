@@ -63,6 +63,9 @@ func (app *App) createIndexes() {
 
 // Register the routes in the router
 func(app *App) setupRouters() {
+	authRouter := app.Router.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
+
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
 	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.UpdateStudent)).Methods("PUT")

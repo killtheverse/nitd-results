@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -42,10 +43,11 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	branchString := "^" + branch
 	programString := "^" + program
 
+
 	filter := bson.D{
-		{"roll_no", bson.D{{"$regex", batchString}}},
-		{"branch", bson.D{{"$regex", branchString}, {"$options", "i"}}},
-		{"program", bson.D{{"$regex", programString}, {"$options", "i"}}},
+	primitive.E{Key: "roll_no", Value: bson.D{primitive.E{Key: "$regex", Value: batchString}}},
+	primitive.E{Key: "branch", Value: bson.D{primitive.E{Key: "$regex", Value: branchString}, {Key: "$options", Value: "i"}}},
+	primitive.E{Key: "program", Value: bson.D{{Key: "$regex", Value: programString}, {Key: "$options", Value: "i"}}},
 	}
 
 	opts := options.FindOptions{
