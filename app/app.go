@@ -65,6 +65,7 @@ func (app *App) createIndexes() {
 func(app *App) setupRouters() {
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
+	authRouter.HandleFunc("/refresh/", handlers.Refresh).Methods("GET")
 
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -28,7 +29,7 @@ type Credentials struct {
 }
 
 // createSignedToken will create and return a signed token based on the username
-func createSignedToken(claim UserClaim) (string, error) {
+func createSignedToken(claims *UserClaim) (string, error) {
 	privateKey, err := ioutil.ReadFile("key.rsa")
 	if err != nil {
 		return "", err
@@ -39,7 +40,7 @@ func createSignedToken(claim UserClaim) (string, error) {
 		return "", err
 	}
 
-	token := jwt.New(jwt.SigningMethodRS256)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	tokenString, err := token.SignedString(key)
 	if err != nil {
 		return "", err 
@@ -47,6 +48,29 @@ func createSignedToken(claim UserClaim) (string, error) {
 	return tokenString, nil
 }
 
+// parseToken will parse a token from a string
+func parseToken(tokenString string, claims *UserClaim) (*jwt.Token, error) {
+	publicKey, err := ioutil.ReadFile("key.rsa.pub")
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, err
+		}
+		return key, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return parsedToken, nil
+}
 
 
 func SignIn(rw http.ResponseWriter, request *http.Request) {
@@ -77,22 +101,17 @@ func SignIn(rw http.ResponseWriter, request *http.Request) {
 		}
 
 		// Generate token
-		tokenString, err := createSignedToken(*claims)
+		tokenString, err := createSignedToken(claims)
 		if err != nil {
-			logger.Write("[ERROR]: %s", err)
+			logger.Write("[ERROR]: Error in creating token - %s", err)
 			utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured", nil)
 			return
 		} else {
 			logger.Write("Credentials validated")
-
-			//Set the client's cookie for "token" as the same as JWT created
-			http.SetCookie(rw, &http.Cookie{
-				Name: "token",
-				Value: tokenString,
-				Expires: expirationTime,
-				HttpOnly: true,
-			})
-			utils.ResponseWriter(rw, http.StatusOK, "Signed in", nil)
+			response := map[string]string {
+				"token": tokenString,
+			}
+			utils.ResponseWriter(rw, http.StatusOK, "Signed in", response)
 		}
 		
 	} else {
@@ -100,4 +119,62 @@ func SignIn(rw http.ResponseWriter, request *http.Request) {
 		utils.ResponseWriter(rw, http.StatusUnauthorized, "Invalid username or password", nil)
 		return
 	}
+}
+
+
+func Refresh(rw http.ResponseWriter, request *http.Request) {
+	// Parse request header and extract the token
+	authHeader := request.Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, "Bearer ")[1]
+	
+	claims := &UserClaim{}
+	token, err := parseToken(tokenString, claims)
+	if err != nil {
+		logger.Write("[ERROR]: Error in parsing token - %s", err)
+		if err == jwt.ErrSignatureInvalid {
+			utils.ResponseWriter(rw, http.StatusUnauthorized, "Invalid signature", nil)
+			return
+		}
+
+		vErr, _ := err.(*jwt.ValidationError)
+		if vErr.Errors == jwt.ValidationErrorExpired {
+			utils.ResponseWriter(rw, http.StatusUnauthorized, "Token expired", nil)
+			return
+		}
+		
+		utils.ResponseWriter(rw, http.StatusBadRequest, "", nil)
+		return
+	}
+
+	if !token.Valid {
+		logger.Write("Invalid token")
+		utils.ResponseWriter(rw, http.StatusUnauthorized, "Invalid token", nil)
+		return
+	}
+
+	// We ensure that a new token is not issued until enough time has elapsed
+	// In this case, a new token will only be issued if the old token is within
+	// 30 seconds of expiry. Otherwise, return a bad request status
+	if time.Until(time.Unix(claims.ExpiresAt, 0)) > 30*time.Second {
+		logger.Write("Token has not expired")
+		utils.ResponseWriter(rw, http.StatusBadRequest, "Token has not expired", nil)
+		return
+	}
+
+	// Create a new token with renewed expiration time
+	expirationTime := time.Now().Add(1*time.Minute)
+	claims.ExpiresAt = expirationTime.Unix()
+	tokenString, err = createSignedToken(claims)
+	if err != nil {
+		logger.Write("[ERROR]: Error in creating token - %s", err)
+		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured", nil)
+		return
+	} else {
+		logger.Write("Credentials validated")
+		response := map[string]string {
+			"token": tokenString,
+		}
+		utils.ResponseWriter(rw, http.StatusOK, "Token refeshed", response)
+	}
+	logger.Write("claims: %v", claims)
 }
