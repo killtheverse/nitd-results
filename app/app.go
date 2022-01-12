@@ -65,12 +65,14 @@ func (app *App) createIndexes() {
 func(app *App) setupRouters() {
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
-	authRouter.HandleFunc("/refresh/", handlers.Refresh).Methods("GET")
 
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
 	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
-	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.UpdateStudent)).Methods("PUT")
 	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.GetStudent)).Methods("GET")
+
+	studentUpdateRouter := studentRouter.Methods(http.MethodPut).Subrouter()
+	studentUpdateRouter.Use(utils.AuthenticationRequiredMiddleware)
+	studentUpdateRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.UpdateStudent)).Methods("PUT")
 }
 
 // Run will start the http server
