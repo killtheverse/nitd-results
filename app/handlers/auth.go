@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 
@@ -15,6 +15,7 @@ import (
 func SignIn(rw http.ResponseWriter, request *http.Request) {
 	// Parse request body to get the credentials
 	var creds utils.Credentials
+
 	err := json.NewDecoder(request.Body).Decode(&creds)
 	if err != nil {
 		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)

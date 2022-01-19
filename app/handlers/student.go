@@ -104,13 +104,13 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 	// Extract roll number from request URI
 	var params = mux.Vars(request)
 	roll_no := params["roll_number"]
-	
+
 	// Parse request body and extract the student
 	var student models.Student
 	err := json.NewDecoder(request.Body).Decode(&student)
 	if err != nil {
 		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
-		logger.Write("[ERROR]: %v", err)
+		logger.Write("[ERROR]: Error in unmarshalling student object - %v", err)
 		return
 	}
 
@@ -118,6 +118,7 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 	validate := validator.New()
 	err = validate.Struct(student)
 	if err != nil {
+		logger.Write("[ERROR]: Errors in validating student")
 		validationErrors := err.(validator.ValidationErrors)
 		responseBody := map[string]string{"error": validationErrors.Error()}
 		utils.ResponseWriter(rw, http.StatusUnprocessableEntity, "Errors in validation", responseBody)
