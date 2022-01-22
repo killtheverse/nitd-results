@@ -1,3 +1,19 @@
+// Package classification for Student API
+//
+// Documentation for Student API
+//
+//	Schemes: http
+//	BasePath: /students
+//	Version: 1.0.0
+//	Contact: Rahul Dev Kureel<r.dev2000@gmail.com>
+//
+//	Consumes:
+//	- application/json
+//
+//	Produces:
+//	- application/json
+//	
+// swagger:meta
 package handlers
 
 import (
@@ -19,6 +35,17 @@ import (
 	"github.com/killtheverse/nitd-results/app/utils"
 )
 
+// swagger:route GET /students students listStudents
+// Returns a list of students filtered by parameters
+// Consumes:
+// - application/json
+
+// Produces:
+// - application/json
+
+// Schemes: http
+
+// GetStudents returns a list of students based on the search query parameters
 func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
 	// Extract query parameters
 	var params = request.URL.Query()

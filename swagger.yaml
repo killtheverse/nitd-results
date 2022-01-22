@@ -1,0 +1,24 @@
+basePath: /students
+consumes:
+- application/json
+info:
+  contact:
+    email: r.dev2000@gmail.com
+    name: Rahul Dev Kureel
+  description: Documentation for Student API
+  title: for Student API
+  version: 1.0.0
+paths:
+  /students:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of students filtered by parameters
+      operationId: listStudents
+      tags:
+      - students
+produces:
+- application/json
+schemes:
+- http
+swagger: "2.0"

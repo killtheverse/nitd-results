@@ -67,7 +67,7 @@ func(app *App) setupRouters() {
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
 
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
-	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
+	studentRouter.HandleFunc("", app.handleRequest(handlers.GetStudents)).Methods("GET")
 	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.GetStudent)).Methods("GET")
 
 	studentUpdateRouter := studentRouter.Methods(http.MethodPut).Subrouter()
