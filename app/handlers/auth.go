@@ -18,7 +18,7 @@ func SignIn(rw http.ResponseWriter, request *http.Request) {
 
 	err := json.NewDecoder(request.Body).Decode(&creds)
 	if err != nil {
-		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
+		utils.ErrorResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
 		logger.Write("[ERROR]: %v", err)
 		return
 	}
@@ -44,19 +44,19 @@ func SignIn(rw http.ResponseWriter, request *http.Request) {
 		tokenString, err := utils.CreateSignedToken(claims)
 		if err != nil {
 			logger.Write("[ERROR]: Error in creating token - %s", err)
-			utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured", nil)
+			utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured", nil)
 			return
 		} else {
 			logger.Write("Credentials validated")
 			response := map[string]string {
 				"token": tokenString,
 			}
-			utils.ResponseWriter(rw, http.StatusOK, "Signed in", response)
+			utils.ErrorResponseWriter(rw, http.StatusOK, "Signed in", response)
 		}
 		
 	} else {
 		logger.Write("Invalid credentials")
-		utils.ResponseWriter(rw, http.StatusUnauthorized, "Invalid username or password", nil)
+		utils.ErrorResponseWriter(rw, http.StatusUnauthorized, "Invalid username or password", nil)
 		return
 	}
 }

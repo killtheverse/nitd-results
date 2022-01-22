@@ -63,6 +63,8 @@ func (app *App) createIndexes() {
 
 // Register the routes in the router
 func(app *App) setupRouters() {
+	// app.Router.Handle("/docs", )
+
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
 

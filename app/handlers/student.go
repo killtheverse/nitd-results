@@ -12,7 +12,7 @@
 //
 //	Produces:
 //	- application/json
-//	
+//
 // swagger:meta
 package handlers
 
@@ -39,11 +39,15 @@ import (
 // Returns a list of students filtered by parameters
 // Consumes:
 // - application/json
-
+//
 // Produces:
 // - application/json
-
+//
 // Schemes: http
+//
+// Responses:
+//	default: Response
+//	200: PaginatedResponse
 
 // GetStudents returns a list of students based on the search query parameters
 func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
@@ -60,6 +64,10 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	if err != nil {
 		limit = 100
 	}
+	if limit>100 {
+		limit = 100
+	}
+
 	offset, err := strconv.ParseInt(offsetString, 10, 64)
 	if err != nil {
 		offset = 0
@@ -92,16 +100,36 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	cursor, err := db.Collection("students").Find(ctx, filter, &opts)
 	if err != nil {
 		logger.Write("[ERROR]: While quering collection - %s", err)
-		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
+		utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
 		return
 	}
 	err = cursor.All(context.Background(), &students)
 	if err != nil {
 		logger.Write("[ERROR] in cursor - %s", err)
-		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
+		utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured while reading data", nil)
 		return
 	}
-	utils.ResponseWriter(rw, http.StatusOK, "Retrieved students list", students)
+
+	// Write a paginated response
+	var nextOffset int64 = offset + limit
+	var nextLimit int64 = limit
+	params.Add("offset", strconv.Itoa(int(nextOffset)))
+	params.Add("limit", strconv.Itoa(int(nextLimit)))
+	request.URL.RawQuery = params.Encode()
+	var next string = request.URL.String()
+	
+	var prevOffset int64 = offset - limit
+	if prevOffset < 0 {
+		prevOffset = 0
+	}
+	var prevLimit int64 = limit
+	params.Add("offset", strconv.Itoa(int(prevOffset)))
+	params.Add("limit", strconv.Itoa(int(prevLimit)))
+	request.URL.RawQuery = params.Encode()
+	var prev string = request.URL.String()
+	
+	count := len(students)
+	utils.PaginatedResponseWriter(rw, http.StatusOK, "Retrieved students list", count, next, prev, students)
 }
 
 func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
@@ -117,13 +145,16 @@ func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Reques
 	err := db.Collection("students").FindOne(ctx, filter).Decode(&student)
 	if err == mongo.ErrNoDocuments {
 		logger.Write("No document found for roll number: %s.", student.Roll)
-		utils.ResponseWriter(rw, http.StatusNotFound, "No document exists", nil)
+		utils.ErrorResponseWriter(rw, http.StatusNotFound, "No document exists", nil)
+		return
 	} else if err == nil{
 		logger.Write("Document found for %s", student.Roll)
 		utils.ResponseWriter(rw, http.StatusOK, "Found the document", student)
+		return
 	} else {
 		logger.Write("[ERROR]: %s", err)
-		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for document", nil)
+		utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for document", nil)
+		return
 	}
 }
 
@@ -136,7 +167,7 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 	var student models.Student
 	err := json.NewDecoder(request.Body).Decode(&student)
 	if err != nil {
-		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
+		utils.ErrorResponseWriter(rw, http.StatusBadRequest, "Invalid JSON body", nil)
 		logger.Write("[ERROR]: Error in unmarshalling student object - %v", err)
 		return
 	}
@@ -148,13 +179,13 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 		logger.Write("[ERROR]: Errors in validating student")
 		validationErrors := err.(validator.ValidationErrors)
 		responseBody := map[string]string{"error": validationErrors.Error()}
-		utils.ResponseWriter(rw, http.StatusUnprocessableEntity, "Errors in validation", responseBody)
+		utils.ErrorResponseWriter(rw, http.StatusUnprocessableEntity, "Errors in validation", responseBody)
 		return
 	}
 
 	if student.Roll != roll_no {
 		logger.Write("Roll number in payload does not match roll number in URI")
-		utils.ResponseWriter(rw, http.StatusBadRequest, "Invalid roll number in payload", nil)
+		utils.ErrorResponseWriter(rw, http.StatusBadRequest, "Invalid roll number in payload", nil)
 		return
 	}
 
@@ -177,7 +208,7 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 		existing_semesters = existing_student.Semesters
 	} else {
 		logger.Write("[ERROR]: %s", err)
-		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for existing documents", nil)
+		utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured while looking up for existing documents", nil)
 		return
 	}
 	student.UpdatedAt = time.Now()
@@ -207,7 +238,7 @@ func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Req
 	
 	if err != nil {
 		logger.Write("[ERROR] Updating docuement - %s", err)
-		utils.ResponseWriter(rw, http.StatusInternalServerError, "Error occured while updating document", nil)
+		utils.ErrorResponseWriter(rw, http.StatusInternalServerError, "Error occured while updating document", nil)
 	} else {
 		var message string
 		if exists {

@@ -34,7 +34,7 @@ func AuthenticationRequiredMiddleware(next http.Handler) http.Handler {
 		authHeader := request.Header.Get("Authorization")
 		tokenValue := strings.Split(authHeader, "Bearer ")
 		if len(tokenValue) != 2 {
-			ResponseWriter(rw, http.StatusBadRequest, "Error in parsing token", nil)
+			ErrorResponseWriter(rw, http.StatusBadRequest, "Error in parsing token", nil)
 			return
 		}
 
@@ -45,23 +45,23 @@ func AuthenticationRequiredMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			logger.Write("[ERROR]: Error in parsing token - %s", err)
 			if err == jwt.ErrSignatureInvalid {
-				ResponseWriter(rw, http.StatusUnauthorized, "Invalid signature", nil)
+				ErrorResponseWriter(rw, http.StatusUnauthorized, "Invalid signature", nil)
 				return
 			}
 
 			vErr, _ := err.(*jwt.ValidationError)
 			if vErr.Errors == jwt.ValidationErrorExpired {
-				ResponseWriter(rw, http.StatusUnauthorized, "Token expired", nil)
+				ErrorResponseWriter(rw, http.StatusUnauthorized, "Token expired", nil)
 				return
 			}
 			
-			ResponseWriter(rw, http.StatusBadRequest, "Error in parsing token", nil)
+			ErrorResponseWriter(rw, http.StatusBadRequest, "Error in parsing token", nil)
 			return
 		}
 
 		if !token.Valid {
 			logger.Write("Invalid token")
-			ResponseWriter(rw, http.StatusUnauthorized, "Invalid token", nil)
+			ErrorResponseWriter(rw, http.StatusUnauthorized, "Invalid token", nil)
 			return
 		}
 

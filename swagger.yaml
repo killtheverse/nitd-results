@@ -1,6 +1,82 @@
 basePath: /students
 consumes:
 - application/json
+definitions:
+  Course:
+    properties:
+      code:
+        type: string
+        x-go-name: Code
+      course_credits:
+        format: int64
+        type: integer
+        x-go-name: Credits
+      grade:
+        type: string
+        x-go-name: Grade
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
+  Semester:
+    properties:
+      cgpa:
+        format: float
+        type: number
+        x-go-name: CGPA
+      courses:
+        items:
+          $ref: '#/definitions/Course'
+        type: array
+        x-go-name: Courses
+      earned_credits:
+        format: int64
+        type: integer
+        x-go-name: Credits
+      number:
+        format: int64
+        type: integer
+        x-go-name: Number
+      sgpa:
+        format: float
+        type: number
+        x-go-name: SGPA
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
+  Student:
+    properties:
+      branch:
+        type: string
+        x-go-name: Branch
+      cgpa:
+        format: float
+        type: number
+        x-go-name: CGPA
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      name:
+        type: string
+        x-go-name: Name
+      program:
+        type: string
+        x-go-name: Program
+      roll_no:
+        type: string
+        x-go-name: Roll
+      semesters:
+        items:
+          $ref: '#/definitions/Semester'
+        type: array
+        x-go-name: Semesters
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
 info:
   contact:
     email: r.dev2000@gmail.com
@@ -15,10 +91,76 @@ paths:
       - application/json
       description: Returns a list of students filtered by parameters
       operationId: listStudents
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/PaginatedResponse'
+        default:
+          $ref: '#/responses/Response'
+      schemes:
+      - http
       tags:
       - students
 produces:
 - application/json
+responses:
+  ErrorResponse:
+    description: Response for returning an error message
+    headers:
+      content:
+        description: Content to displayed along with the message
+      message:
+        description: Error message
+        type: string
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+    schema:
+      type: object
+  PaginatedResponse:
+    description: Response for returning a list of students
+    headers:
+      count:
+        description: Count of students in response
+        format: int64
+        maximum: 100
+        minimum: 0
+        type: integer
+      message:
+        description: Message in the response
+        type: string
+      next:
+        description: Path to fetch the students next in the list
+        type: string
+      previous:
+        description: Path to fetch the students before the items currently in the
+          list
+        type: string
+      results:
+        description: List of students
+        items:
+          $ref: '#/definitions/Student'
+        type: array
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+  Response:
+    description: Response for returning a single student
+    headers:
+      content:
+        description: Student to be displayed
+      message:
+        description: Message in the response
+        type: string
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+    schema:
+      $ref: '#/definitions/Student'
 schemes:
 - http
 swagger: "2.0"
