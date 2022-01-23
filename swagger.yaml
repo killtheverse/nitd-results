@@ -3,78 +3,118 @@ consumes:
 - application/json
 definitions:
   Course:
+    description: Course defines the structure of a course
     properties:
       code:
+        description: code for the course
         type: string
         x-go-name: Code
       course_credits:
+        description: number of credits for the course
         format: int64
+        minimum: 1
         type: integer
         x-go-name: Credits
       grade:
+        description: grade received by the student
         type: string
         x-go-name: Grade
       name:
+        description: name of the course
         type: string
         x-go-name: Name
+    required:
+    - name
+    - code
+    - course_credits
+    - grade
     type: object
     x-go-package: github.com/killtheverse/nitd-results/app/models
   Semester:
+    description: Semester defines the structure of a semester
     properties:
       cgpa:
+        description: cgpa after this semester
         format: float
         type: number
         x-go-name: CGPA
       courses:
+        description: information about courses taken by the student in the semester
         items:
           $ref: '#/definitions/Course'
         type: array
         x-go-name: Courses
       earned_credits:
+        description: credits earned by the student in that semester
         format: int64
+        minimum: 1
         type: integer
         x-go-name: Credits
       number:
+        description: semester number
         format: int64
         type: integer
         x-go-name: Number
       sgpa:
+        description: sgpa earned for the semester by the student
         format: float
         type: number
         x-go-name: SGPA
+    required:
+    - number
+    - earned_credits
+    - sgpa
+    - cgpa
+    - courses
     type: object
     x-go-package: github.com/killtheverse/nitd-results/app/models
   Student:
+    description: Student defines the structure of a student
     properties:
       branch:
+        description: branch of the student
         type: string
         x-go-name: Branch
       cgpa:
+        description: current cgpa of the student
         format: float
         type: number
         x-go-name: CGPA
       created_at:
+        description: time at which the instance was created in the database
         format: date-time
         type: string
         x-go-name: CreatedAt
       name:
+        description: name of the student
         type: string
         x-go-name: Name
       program:
+        description: 'program in which the student is enrolled in '
         type: string
         x-go-name: Program
       roll_no:
+        description: roll number of student
         type: string
         x-go-name: Roll
       semesters:
+        description: information about the previous semesters of a student
         items:
           $ref: '#/definitions/Semester'
         type: array
         x-go-name: Semesters
       updated_at:
+        description: time at which the student instance was last updated in the database
         format: date-time
         type: string
         x-go-name: UpdatedAt
+    required:
+    - roll_no
+    - name
+    - program
+    - branch
+    - cgpa
+    - semesters
     type: object
     x-go-package: github.com/killtheverse/nitd-results/app/models
 info:
@@ -85,19 +125,66 @@ info:
   title: for Student API
   version: 1.0.0
 paths:
-  /students:
+  /:
     get:
       consumes:
       - application/json
       description: Returns a list of students filtered by parameters
       operationId: listStudents
+      parameters:
+      - description: The branch of the students
+        in: query
+        name: branch
+        type: string
+        x-go-name: Branch
+      - description: The program of the students
+        in: query
+        name: program
+        type: string
+        x-go-name: Program
+      - description: Limit on the number of results
+        format: int64
+        in: query
+        name: limit
+        type: integer
+        x-go-name: Limit
+      - description: Offset on the results
+        format: int64
+        in: query
+        name: offset
+        type: integer
+        x-go-name: Offset
       produces:
       - application/json
       responses:
         "200":
           $ref: '#/responses/PaginatedResponse'
         default:
+          $ref: '#/responses/ErrorResponse'
+      schemes:
+      - http
+      tags:
+      - students
+  /{roll_number}:
+    get:
+      consumes:
+      - application/json
+      description: Returns information about a particular student
+      operationId: studentDetail
+      parameters:
+      - description: The roll number of the student
+        in: path
+        name: roll_number
+        required: true
+        type: string
+        x-go-name: Roll
+      produces:
+      - application/json
+      responses:
+        "200":
           $ref: '#/responses/Response'
+        default:
+          $ref: '#/responses/ErrorResponse'
       schemes:
       - http
       tags:
@@ -139,6 +226,7 @@ responses:
           list
         type: string
       results:
+        collectionFormat: Student
         description: List of students
         items:
           $ref: '#/definitions/Student'
@@ -150,8 +238,6 @@ responses:
   Response:
     description: Response for returning a single student
     headers:
-      content:
-        description: Student to be displayed
       message:
         description: Message in the response
         type: string
@@ -159,6 +245,8 @@ responses:
         description: Status of the response
         format: int64
         type: integer
+      student:
+        description: Student to be displayed
     schema:
       $ref: '#/definitions/Student'
 schemes:

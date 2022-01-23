@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/x/bsonx"
@@ -63,13 +64,16 @@ func (app *App) createIndexes() {
 
 // Register the routes in the router
 func(app *App) setupRouters() {
-	// app.Router.Handle("/docs", )
+	doc_opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	doc_middleware := middleware.Redoc(doc_opts, nil)
+	app.Router.Handle("/docs", doc_middleware)
+	app.Router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")
 
 	studentRouter := app.Router.PathPrefix("/students").Subrouter()
-	studentRouter.HandleFunc("", app.handleRequest(handlers.GetStudents)).Methods("GET")
+	studentRouter.HandleFunc("/", app.handleRequest(handlers.GetStudents)).Methods("GET")
 	studentRouter.HandleFunc("/{roll_number}", app.handleRequest(handlers.GetStudent)).Methods("GET")
 
 	studentUpdateRouter := studentRouter.Methods(http.MethodPut).Subrouter()

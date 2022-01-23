@@ -35,7 +35,7 @@ import (
 	"github.com/killtheverse/nitd-results/app/utils"
 )
 
-// swagger:route GET /students students listStudents
+// swagger:route GET / students listStudents
 // Returns a list of students filtered by parameters
 // Consumes:
 // - application/json
@@ -46,7 +46,7 @@ import (
 // Schemes: http
 //
 // Responses:
-//	default: Response
+//	default: ErrorResponse
 //	200: PaginatedResponse
 
 // GetStudents returns a list of students based on the search query parameters
@@ -132,6 +132,21 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	utils.PaginatedResponseWriter(rw, http.StatusOK, "Retrieved students list", count, next, prev, students)
 }
 
+// swagger:route GET /{roll_number} students studentDetail
+// Returns information about a particular student
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+//
+// Schemes: http
+//
+// Responses:
+//	default: ErrorResponse
+//	200: Response
+
+// GetStudent returns information about a particular student
 func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
 	// Extract roll number from request URI
 	var params = mux.Vars(request)

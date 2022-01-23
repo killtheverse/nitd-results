@@ -8,7 +8,7 @@ type Response struct {
 	// Message in the response
 	Message		string		`json:"message"`
 	// Student to be displayed
-	Student		Student		`json:"content"`
+	Student		Student		`json:"student"`
 }
 
 // Response for returning an error message
@@ -38,6 +38,7 @@ type PaginatedResponse struct {
 	// Path to fetch the students before the items currently in the list
 	Previous	string		`json:"previous"`
 	// List of students
+	// collection format: Student
 	Students	[]Student	`json:"results"`	
 }
 
