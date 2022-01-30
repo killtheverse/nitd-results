@@ -161,21 +161,18 @@ func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Reques
 }
 
 // swagger:route PUT /students/{roll_number} students updateStudent
-// Updates a student if it exists in the database, otherwise creates a new entry
+// Updates the student if it exists, otherwise creates a new entry
 // Consumes:
 // - application/json
-// 
+//
 // Produces:
 // - application/json
 //
 // Schemes: http
 //
-// Security:
-// 	bearerAuth: []
-//
 // Responses:
-// default: ErrorResponse
-// 201: Response
+//	default: ErrorResponse
+//	201: Response
 
 // UpdateStudent updates or creates a student in the database
 func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {

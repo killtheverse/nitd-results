@@ -79,9 +79,11 @@ type Student struct {
 	
 	// Time at which the instance was created in the database
 	// required: false
+	// read only: true
 	CreatedAt	time.Time	`json:"created_at" bson:"created_at"`
 	
 	// Time at which the student instance was last updated in the database
 	// required: false
+	// read only: true
 	UpdatedAt	time.Time	`json:"updated_at" bson:"updated_at"`
 }

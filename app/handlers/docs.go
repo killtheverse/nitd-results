@@ -43,12 +43,25 @@ type studentListParameterWrapper struct {
 	Offset	int		`json:"offset"`	
 }
 
-// swagger:parameters studentDetail updateStudent
-type studentRollParameterWrapper struct {
+// swagger:parameters studentDetail
+type studentDetailParameterWrapper struct {
 	// The roll number of the student
 	// in: path
 	// required: true
 	Roll	string	`json:"roll_number"`
+}
+
+// swagger:parameters updateStudent
+type studentUpdateParameterWrapper struct {
+	// The roll number of the student
+	// in: path
+	// required: true
+	Roll	string	`json:"roll_number"`
+	
+	// The student which is to be updated
+	// in: body
+	// required: true
+	Student	models.Student	`json:"student"`	
 }
 
 // swagger:response Response
