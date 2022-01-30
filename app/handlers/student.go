@@ -1,25 +1,10 @@
-// Package classification for Student API
-//
-// Documentation for Student API
-//
-//	Schemes: http
-//	BasePath: /students
-//	Version: 1.0.0
-//	Contact: Rahul Dev Kureel<r.dev2000@gmail.com>
-//
-//	Consumes:
-//	- application/json
-//
-//	Produces:
-//	- application/json
-//
-// swagger:meta
 package handlers
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -35,7 +20,7 @@ import (
 	"github.com/killtheverse/nitd-results/app/utils"
 )
 
-// swagger:route GET / students listStudents
+// swagger:route GET /students students listStudents
 // Returns a list of students filtered by parameters
 // Consumes:
 // - application/json
@@ -113,8 +98,10 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	// Write a paginated response
 	var nextOffset int64 = offset + limit
 	var nextLimit int64 = limit
-	params.Add("offset", strconv.Itoa(int(nextOffset)))
-	params.Add("limit", strconv.Itoa(int(nextLimit)))
+	var nextParams url.Values = params
+	var prevParams url.Values = params
+	nextParams.Set("offset", strconv.Itoa(int(nextOffset)))
+	nextParams.Set("limit", strconv.Itoa(int(nextLimit)))
 	request.URL.RawQuery = params.Encode()
 	var next string = request.URL.String()
 	
@@ -123,8 +110,8 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 		prevOffset = 0
 	}
 	var prevLimit int64 = limit
-	params.Add("offset", strconv.Itoa(int(prevOffset)))
-	params.Add("limit", strconv.Itoa(int(prevLimit)))
+	prevParams.Set("offset", strconv.Itoa(int(prevOffset)))
+	prevParams.Set("limit", strconv.Itoa(int(prevLimit)))
 	request.URL.RawQuery = params.Encode()
 	var prev string = request.URL.String()
 	
@@ -132,7 +119,7 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 	utils.PaginatedResponseWriter(rw, http.StatusOK, "Retrieved students list", count, next, prev, students)
 }
 
-// swagger:route GET /{roll_number} students studentDetail
+// swagger:route GET /students/{roll_number} students studentDetail
 // Returns information about a particular student
 // Consumes:
 // - application/json
@@ -173,6 +160,24 @@ func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Reques
 	}
 }
 
+// swagger:route PUT /students/{roll_number} students updateStudent
+// Updates a student if it exists in the database, otherwise creates a new entry
+// Consumes:
+// - application/json
+// 
+// Produces:
+// - application/json
+//
+// Schemes: http
+//
+// Security:
+// 	bearerAuth: []
+//
+// Responses:
+// default: ErrorResponse
+// 201: Response
+
+// UpdateStudent updates or creates a student in the database
 func UpdateStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Request) {
 	// Extract roll number from request URI
 	var params = mux.Vars(request)

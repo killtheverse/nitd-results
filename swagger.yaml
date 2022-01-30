@@ -1,4 +1,4 @@
-basePath: /students
+basePath: /
 consumes:
 - application/json
 definitions:
@@ -6,21 +6,21 @@ definitions:
     description: Course defines the structure of a course
     properties:
       code:
-        description: code for the course
+        description: Code for the course
         type: string
         x-go-name: Code
       course_credits:
-        description: number of credits for the course
+        description: Number of credits for the course
         format: int64
         minimum: 1
         type: integer
         x-go-name: Credits
       grade:
-        description: grade received by the student
+        description: Grade received by the student
         type: string
         x-go-name: Grade
       name:
-        description: name of the course
+        description: Name of the course
         type: string
         x-go-name: Name
     required:
@@ -30,33 +30,105 @@ definitions:
     - grade
     type: object
     x-go-package: github.com/killtheverse/nitd-results/app/models
+  ErrorResponse:
+    description: Response for returning an error message
+    properties:
+      content:
+        description: Content to displayed along with the message
+        type: object
+        x-go-name: Content
+      message:
+        description: Error message
+        type: string
+        x-go-name: Message
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+        x-go-name: Status
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
+  PaginatedResponse:
+    description: Response for returning a list of students
+    properties:
+      count:
+        description: Count of students in response
+        format: int64
+        maximum: 100
+        minimum: 0
+        type: integer
+        x-go-name: Count
+      message:
+        description: Message in the response
+        type: string
+        x-go-name: Message
+      next:
+        description: Path to fetch the students next in the list
+        type: string
+        x-go-name: Next
+      previous:
+        description: Path to fetch the students before the items currently in the
+          list
+        type: string
+        x-go-name: Previous
+      results:
+        description: |-
+          List of students
+          collection format: Student
+        items:
+          $ref: '#/definitions/Student'
+        type: array
+        x-go-name: Students
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+        x-go-name: Status
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
+  Response:
+    description: Response for returning a single student
+    properties:
+      message:
+        description: Message in the response
+        type: string
+        x-go-name: Message
+      status:
+        description: Status of the response
+        format: int64
+        type: integer
+        x-go-name: Status
+      student:
+        $ref: '#/definitions/Student'
+    type: object
+    x-go-package: github.com/killtheverse/nitd-results/app/models
   Semester:
     description: Semester defines the structure of a semester
     properties:
       cgpa:
-        description: cgpa after this semester
+        description: CGPA after this semester
         format: float
         type: number
         x-go-name: CGPA
       courses:
-        description: information about courses taken by the student in the semester
+        description: Information about courses taken by the student in the semester
         items:
           $ref: '#/definitions/Course'
         type: array
         x-go-name: Courses
       earned_credits:
-        description: credits earned by the student in that semester
+        description: Credits earned by the student in that semester
         format: int64
         minimum: 1
         type: integer
         x-go-name: Credits
       number:
-        description: semester number
+        description: Semester number
         format: int64
         type: integer
         x-go-name: Number
       sgpa:
-        description: sgpa earned for the semester by the student
+        description: SGPA earned for the semester by the student
         format: float
         type: number
         x-go-name: SGPA
@@ -72,39 +144,39 @@ definitions:
     description: Student defines the structure of a student
     properties:
       branch:
-        description: branch of the student
+        description: Branch of the student
         type: string
         x-go-name: Branch
       cgpa:
-        description: current cgpa of the student
+        description: Current CGPA of the student
         format: float
         type: number
         x-go-name: CGPA
       created_at:
-        description: time at which the instance was created in the database
+        description: Time at which the instance was created in the database
         format: date-time
         type: string
         x-go-name: CreatedAt
       name:
-        description: name of the student
+        description: Name of the student
         type: string
         x-go-name: Name
       program:
-        description: 'program in which the student is enrolled in '
+        description: 'Program in which the student is enrolled in '
         type: string
         x-go-name: Program
       roll_no:
-        description: roll number of student
+        description: Roll number of student
         type: string
         x-go-name: Roll
       semesters:
-        description: information about the previous semesters of a student
+        description: Information about the previous semesters of a student
         items:
           $ref: '#/definitions/Semester'
         type: array
         x-go-name: Semesters
       updated_at:
-        description: time at which the student instance was last updated in the database
+        description: Time at which the student instance was last updated in the database
         format: date-time
         type: string
         x-go-name: UpdatedAt
@@ -121,11 +193,11 @@ info:
   contact:
     email: r.dev2000@gmail.com
     name: Rahul Dev Kureel
-  description: Documentation for Student API
-  title: for Student API
+  description: Documentation for NITD Results API
+  title: for NITD Results API
   version: 1.0.0
 paths:
-  /:
+  /students:
     get:
       consumes:
       - application/json
@@ -165,7 +237,7 @@ paths:
       - http
       tags:
       - students
-  /{roll_number}:
+  /students/{roll_number}:
     get:
       consumes:
       - application/json
@@ -189,66 +261,48 @@ paths:
       - http
       tags:
       - students
+    put:
+      consumes:
+      - application/json
+      description: Updates a student if it exists in the database, otherwise creates
+        a new entry
+      operationId: updateStudent
+      parameters:
+      - description: The roll number of the student
+        in: path
+        name: roll_number
+        required: true
+        type: string
+        x-go-name: Roll
+      produces:
+      - application/json
+      responses:
+        "201":
+          $ref: '#/responses/Response'
+        default:
+          $ref: '#/responses/ErrorResponse'
+      schemes:
+      - http
+      security:
+      - bearerAuth:
+        - '[]'
+      tags:
+      - students
 produces:
 - application/json
 responses:
   ErrorResponse:
-    description: Response for returning an error message
-    headers:
-      content:
-        description: Content to displayed along with the message
-      message:
-        description: Error message
-        type: string
-      status:
-        description: Status of the response
-        format: int64
-        type: integer
+    description: ""
     schema:
-      type: object
+      $ref: '#/definitions/ErrorResponse'
   PaginatedResponse:
-    description: Response for returning a list of students
-    headers:
-      count:
-        description: Count of students in response
-        format: int64
-        maximum: 100
-        minimum: 0
-        type: integer
-      message:
-        description: Message in the response
-        type: string
-      next:
-        description: Path to fetch the students next in the list
-        type: string
-      previous:
-        description: Path to fetch the students before the items currently in the
-          list
-        type: string
-      results:
-        collectionFormat: Student
-        description: List of students
-        items:
-          $ref: '#/definitions/Student'
-        type: array
-      status:
-        description: Status of the response
-        format: int64
-        type: integer
-  Response:
-    description: Response for returning a single student
-    headers:
-      message:
-        description: Message in the response
-        type: string
-      status:
-        description: Status of the response
-        format: int64
-        type: integer
-      student:
-        description: Student to be displayed
+    description: ""
     schema:
-      $ref: '#/definitions/Student'
+      $ref: '#/definitions/PaginatedResponse'
+  Response:
+    description: ""
+    schema:
+      $ref: '#/definitions/Response'
 schemes:
 - http
 swagger: "2.0"

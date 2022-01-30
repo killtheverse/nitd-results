@@ -1,42 +1,51 @@
 package models
 
 // Response for returning a single student
-// swagger:response Response
+// swagger:model
 type Response struct {
 	// Status of the response
 	Status		int 		`json:"status"`
+	
 	// Message in the response
 	Message		string		`json:"message"`
+	
 	// Student to be displayed
 	Student		Student		`json:"student"`
 }
 
 // Response for returning an error message
-// swagger:response ErrorResponse
+// swagger:model
 type ErrorResponse struct {
 	// Status of the response
 	Status		int			`json:"status"`
+	
 	// Error message
 	Message		string		`json:"message"`
+	
 	// Content to displayed along with the message
 	Content		interface{}	`json:"content"`
 }
 
 // Response for returning a list of students
-// swagger:response PaginatedResponse
+// swagger:model
 type PaginatedResponse struct {
 	// Status of the response
 	Status		int			`json:"status"`
+	
 	// Message in the response
 	Message		string		`json:"message"`
+	
 	// Count of students in response
 	// maximum: 100
 	// minimum: 0
 	Count		int			`json:"count"`
+	
 	// Path to fetch the students next in the list
 	Next		string		`json:"next"`
+	
 	// Path to fetch the students before the items currently in the list
 	Previous	string		`json:"previous"`
+	
 	// List of students
 	// collection format: Student
 	Students	[]Student	`json:"results"`	
