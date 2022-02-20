@@ -28,7 +28,7 @@ import (
 // Produces:
 // - application/json
 //
-// Schemes: http
+// Schemes: http, https
 //
 // Responses:
 //	default: ErrorResponse
@@ -127,7 +127,7 @@ func GetStudents(db *mongo.Database, rw http.ResponseWriter, request *http.Reque
 // Produces:
 // - application/json
 //
-// Schemes: http
+// Schemes: http, https
 //
 // Responses:
 //	default: ErrorResponse
@@ -168,7 +168,7 @@ func GetStudent(db *mongo.Database, rw http.ResponseWriter, request *http.Reques
 // Produces:
 // - application/json
 //
-// Schemes: http
+// Schemes: http, https
 //
 // Responses:
 //	default: ErrorResponse
