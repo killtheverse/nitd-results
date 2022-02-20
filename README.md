@@ -48,10 +48,48 @@ However, if one wishes to view the results of multiple students, then they will 
 Hence, I created this easy to use API that will fetch the results of multiple students at once. 
 Students can be filtered on several factors - Branch, Batch and Program. 
 Data is fetched from a remote Database which is populated once every semester using the [populator][populator-url]. 
+<br>
+This project is currently hosted on heroku and the API can be accessed [here](https://nitdresults.herokuapp.com/).
 
 ### Built With
 - [Go](https://go.dev/)
 - [Gorilla](https://www.gorillatoolkit.org/)
+
+## Getting Started
+This project is fairly simple to setup
+
+### Prerequisites
+- Install Docker
+
+### Installation
+1. Clone this repository using:
+```sh
+git clone https://github.com/killtheverse/nitd-results.git
+```
+A detailed guide can be found [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+2. Create a .env file and set environment variables:
+```
+PORT:<PORT>
+MONGODB_USER:<MONGODB USER NAME>
+MONGODB_PASSWORD:<MONGODB PASSWORD>
+MONHODB_NAME:<DATABASE NAME>
+MONGODB_URI:<MONGODB CONNECTION STRING>
+```
+3. Run:
+```sh
+docker-compose up
+``` 
+## Usage
+Following endpoints are available:
+
+Endpoint  | HTTP Method | CRUD Method | Function
+-- | -- | -- | --
+`students`  | GET | READ  | Get all students
+`students/<roll_number>`  | GET | READ  | Get details about a specific student
+`students/<roll_number>`  | PUT | UPDATE  | Update information about a student
+
+For more information, refer to the documentation [here](https://nitdresults.herokuapp.com/docs).
 
 ## License
 Distributed under the MIT License. See [LICENSE][license-url] for more information.
@@ -66,6 +104,8 @@ Project Link: [https://github.com/killtheverse/nitd-results](https://github.com/
 - [Go web services](https://github.com/nicholasjackson/building-microservices-youtube)
 - [MongoDB driver](https://docs.mongodb.com/drivers/go/current/)
 - [JWT Authentication](https://learn.vonage.com/blog/2020/03/13/using-jwt-for-authentication-in-a-golang-application-dr/)
+- [Swagger](https://goswagger.io/)
+- [Docker Compose](https://docs.docker.com/compose/)
 - [Readme template](https://github.com/othneildrew/Best-README-Template)
 
 
