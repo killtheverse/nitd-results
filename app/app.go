@@ -71,7 +71,7 @@ func(app *App) setupRouters() {
 
 	app.Router.Handle("/", http.HandlerFunc(func (rw http.ResponseWriter, r *http.Request) {
 		logger.Write("in redirect")
-		http.Redirect(rw, r, "http://"+r.Host+r.URL.String()+"/docs", http.StatusMovedPermanently)
+		http.Redirect(rw, r, "https://"+r.Host+r.URL.String()+"/docs", http.StatusMovedPermanently)
 	}))
 
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
