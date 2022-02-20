@@ -15,7 +15,7 @@ type Config struct {
 
 // initialize will read the environment variables and store them in the config struct
 func (config *Config) initialize() {
-	config.ServerAddress = os.Getenv("SERVER_ADDRESS")
+	config.ServerAddress = ":" + os.Getenv("PORT")
 	config.DBUser = os.Getenv("MONGODB_USER")
 	config.DBPassword = os.Getenv("MONGODB_PASSWORD")
 	config.DBName = os.Getenv("MONGODB_NAME")
