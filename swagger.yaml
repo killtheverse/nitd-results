@@ -196,7 +196,7 @@ info:
     email: r.dev2000@gmail.com
     name: Rahul Dev Kureel
   description: Documentation for NITD Results API
-  title: for NITD Results API
+  title: NITD Results API
   version: 1.0.0
 paths:
   /students:
@@ -237,6 +237,7 @@ paths:
           $ref: '#/responses/ErrorResponse'
       schemes:
       - http
+      - https
       tags:
       - students
   /students/{roll_number}:
@@ -261,6 +262,7 @@ paths:
           $ref: '#/responses/ErrorResponse'
       schemes:
       - http
+      - https
       tags:
       - students
     put:
@@ -291,6 +293,7 @@ paths:
           $ref: '#/responses/ErrorResponse'
       schemes:
       - http
+      - https
       tags:
       - students
 produces:
@@ -310,4 +313,5 @@ responses:
       $ref: '#/definitions/Response'
 schemes:
 - http
+- https
 swagger: "2.0"
