@@ -1,8 +1,8 @@
-// Package classification for NITD Results API
+// Package classification NITD Results API
 //
 // Documentation for NITD Results API
 //
-//	Schemes: http
+//	Schemes: http, https
 //	BasePath: /
 //	Version: 1.0.0
 //	Contact: Rahul Dev Kureel<r.dev2000@gmail.com>
