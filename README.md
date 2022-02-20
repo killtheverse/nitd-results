@@ -1,9 +1,7 @@
-[![Website][website-shield]][website-url]
 [![MIT License][license-shield]][license-url]
 [![Go][go-shield]][go-url]
 [![Build][build-shield]][build-url]
 [![Commit][commit-shield]][commit-url]
-[![Swagger][swagger-shield]][swagger-url]
 ![Code][code-sheild]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
@@ -71,8 +69,6 @@ Project Link: [https://github.com/killtheverse/nitd-results](https://github.com/
 - [Readme template](https://github.com/othneildrew/Best-README-Template)
 
 
-[website-shield]: https://img.shields.io/website?down_color=red&down_message=down&style=for-the-badge&up_color=green&up_message=up&url=https%3A%2F%2Fnitdresults.herokuapp.com%2F 
-[website-url]: https://nitdresults.herokuapp.com/
 [license-shield]: https://img.shields.io/github/license/killtheverse/nitd-results?style=for-the-badge
 [license-url]: https://github.com/killtheverse/nitd-results/blob/main/LICENSE
 [go-shield]: https://img.shields.io/github/go-mod/go-version/killtheverse/nitd-results?style=for-the-badge
@@ -81,8 +77,6 @@ Project Link: [https://github.com/killtheverse/nitd-results](https://github.com/
 [build-url]: https://github.com/killtheverse/nitd-results/actions
 [commit-shield]: https://img.shields.io/github/last-commit/killtheverse/nitd-results?style=for-the-badge
 [commit-url]: https://github.com/killtheverse/nitd-results/commits/main
-[swagger-shield]: https://img.shields.io/swagger/valid/3.0?specUrl=https%3A%2F%2Fnitdresults.herokuapp.com%2Fswagger.yaml&style=for-the-badge
-[swagger-url]: https://nitdresults.herokuapp.com/swagger.yaml
 [code-sheild]: https://img.shields.io/tokei/lines/github/killtheverse/nitd-results?style=for-the-badge
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/rahul-dev-386454136/
