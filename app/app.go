@@ -15,8 +15,8 @@ import (
 
 	"github.com/killtheverse/nitd-results/app/db"
 	"github.com/killtheverse/nitd-results/app/handlers"
-	"github.com/killtheverse/nitd-results/app/utils"
 	logger "github.com/killtheverse/nitd-results/app/logging"
+	"github.com/killtheverse/nitd-results/app/utils"
 	"github.com/killtheverse/nitd-results/config"
 )
 
@@ -68,6 +68,11 @@ func(app *App) setupRouters() {
 	doc_middleware := middleware.Redoc(doc_opts, nil)
 	app.Router.Handle("/docs", doc_middleware)
 	app.Router.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+
+	app.Router.Handle("/", http.HandlerFunc(func (rw http.ResponseWriter, r *http.Request) {
+		logger.Write("in redirect")
+		http.Redirect(rw, r, "http://"+r.Host+r.URL.String()+"/docs", http.StatusMovedPermanently)
+	}))
 
 	authRouter := app.Router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/signin/", handlers.SignIn).Methods("POST")

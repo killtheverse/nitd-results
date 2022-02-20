@@ -8,5 +8,3 @@ services:
         build: .
         env_file:
             - .env
-        volumes:
-            - .:/src/nitd-results/
