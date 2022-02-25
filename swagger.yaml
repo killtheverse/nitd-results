@@ -199,6 +199,24 @@ info:
   title: NITD Results API
   version: 1.0.0
 paths:
+  /auth/signin/:
+    post:
+      consumes:
+      - application/json
+      description: Sign in a user
+      operationId: signIn
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/ErrorResponse'
+        default:
+          $ref: '#/responses/ErrorResponse'
+      schemes:
+      - http
+      - https
+      tags:
+      - authentication
   /students:
     get:
       consumes:

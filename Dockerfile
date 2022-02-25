@@ -8,7 +8,6 @@ ADD . .
 
 RUN make install_swagger
 RUN make swagger
-RUN go mod tidy
 RUN CGO_ENABLED=0 go build -v -o ./cmd/$APP_NAME
 
 CMD ./cmd/$APP_NAME
