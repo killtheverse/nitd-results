@@ -12,6 +12,19 @@ import (
 	"github.com/killtheverse/nitd-results/app/utils"
 )
 
+// swagger:route POST /auth/signin/ authentication signIn
+// Sign in a user
+// Consumes:
+// - application/json
+// 
+// Produces:
+// - application/json
+// 
+// Schemes: http, https
+//
+// Responses:
+//	default: ErrorResponse
+//	200: ErrorResponse
 func SignIn(rw http.ResponseWriter, request *http.Request) {
 	// Parse request body to get the credentials
 	var creds utils.Credentials
@@ -37,7 +50,7 @@ func SignIn(rw http.ResponseWriter, request *http.Request) {
 			&jwt.StandardClaims{
 				ExpiresAt: expirationTime.Unix(),
 			},
-			utils.UserInfo{creds.Username},
+			utils.UserInfo{Username: creds.Username},
 		}
 
 		// Generate token
