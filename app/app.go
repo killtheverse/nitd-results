@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
+	gohandlers "github.com/gorilla/handlers"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 
@@ -88,9 +89,12 @@ func(app *App) setupRouters() {
 
 // Run will start the http server
 func(app *App) run() {
+
+	corsHandler := gohandlers.CORS(gohandlers.AllowedOrigins([]string {"*"}))
+
 	server := http.Server{
 		Addr: app.serverAddress,		// configure the bind address
-		Handler: app.Router,			// set the default handler
+		Handler: corsHandler(app.Router),			// set the default handler
 		ReadTimeout: 5*time.Second,		// max time to read request from the client
 		WriteTimeout: 10*time.Second,	// max time to write response to the client
 		IdleTimeout: 120*time.Second,	// max time for conncections using TCP Keep-Alive
